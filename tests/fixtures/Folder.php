@@ -1,9 +1,9 @@
 <?php
 return array(
-	array(
-		'id'=>1,
-		'name'=>'folder 1',
-	),
+    array(
+        'id'=>1,
+        'name'=>'folder 1',
+    ),
     array(
         'id'=>2,
         'name'=>'Folder 1.2',

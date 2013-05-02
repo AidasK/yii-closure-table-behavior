@@ -1,27 +1,27 @@
 <?php
 class ClosureTableBehaviorTest extends CDbTestCase
 {
-	public $fixtures=array(
-		'Folder',
+    public $fixtures=array(
+        'Folder',
         'folder_tree' => ':folder_tree',
-	);
+    );
 
-	public function testDescendants()
-	{
+    public function testDescendants()
+    {
         $folder = Folder::model()->findByPk(1);
-		$this->assertTrue($folder instanceof Folder);
-		$descendants = $folder->descendants()->findAll();
-		$this->assertEquals(6, count($descendants));
-		foreach($descendants as $descendant) {
-			$this->assertTrue($descendant instanceof Folder);
+        $this->assertTrue($folder instanceof Folder);
+        $descendants = $folder->descendants()->findAll();
+        $this->assertEquals(6, count($descendants));
+        foreach($descendants as $descendant) {
+            $this->assertTrue($descendant instanceof Folder);
         }
-		$this->assertEquals(2, $descendants[0]->primaryKey);
-		$this->assertEquals(3, $descendants[1]->primaryKey);
-		$this->assertEquals(4, $descendants[2]->primaryKey);
-		$this->assertEquals(5, $descendants[3]->primaryKey);
-		$this->assertEquals(6, $descendants[4]->primaryKey);
-		$this->assertEquals(7, $descendants[5]->primaryKey);
-	}
+        $this->assertEquals(2, $descendants[0]->primaryKey);
+        $this->assertEquals(3, $descendants[1]->primaryKey);
+        $this->assertEquals(4, $descendants[2]->primaryKey);
+        $this->assertEquals(5, $descendants[3]->primaryKey);
+        $this->assertEquals(6, $descendants[4]->primaryKey);
+        $this->assertEquals(7, $descendants[5]->primaryKey);
+    }
 
     public function testDescendantsOf()
     {
@@ -35,38 +35,38 @@ class ClosureTableBehaviorTest extends CDbTestCase
         }
     }
 
-	public function testChildren()
-	{
+    public function testChildren()
+    {
         $children = Folder::model()->childrenOf(1)->findAll();
-		$this->assertEquals(2, count($children));
-		foreach($children as $child) {
-			$this->assertTrue($child instanceof Folder);
+        $this->assertEquals(2, count($children));
+        foreach($children as $child) {
+            $this->assertTrue($child instanceof Folder);
         }
-		$this->assertEquals(2, $children[0]->primaryKey);
-		$this->assertEquals(4, $children[1]->primaryKey);
-	}
+        $this->assertEquals(2, $children[0]->primaryKey);
+        $this->assertEquals(4, $children[1]->primaryKey);
+    }
 
-	public function testAncestors()
-	{
+    public function testAncestors()
+    {
         $folder = Folder::model()->findByPk(6);
-		$this->assertTrue($folder instanceof Folder);
-		$ancestors = $folder->ancestors()->findAll();
-		$this->assertEquals(2, count($ancestors));
-		foreach($ancestors as $ancestor) {
-			$this->assertTrue($ancestor instanceof Folder);
+        $this->assertTrue($folder instanceof Folder);
+        $ancestors = $folder->ancestors()->findAll();
+        $this->assertEquals(2, count($ancestors));
+        foreach($ancestors as $ancestor) {
+            $this->assertTrue($ancestor instanceof Folder);
         }
-		$this->assertEquals($ancestors[0]->primaryKey, 1);
-		$this->assertEquals($ancestors[1]->primaryKey, 4);
-	}
+        $this->assertEquals($ancestors[0]->primaryKey, 1);
+        $this->assertEquals($ancestors[1]->primaryKey, 4);
+    }
 
-	public function testParent()
-	{
-		$folder = Folder::model()->findByPk(6);
-		$this->assertTrue($folder instanceof Folder);
-		$parent = $folder->parent()->find();
-		$this->assertTrue($parent instanceof Folder);
-		$this->assertEquals($parent->primaryKey, 4);
-	}
+    public function testParent()
+    {
+        $folder = Folder::model()->findByPk(6);
+        $this->assertTrue($folder instanceof Folder);
+        $parent = $folder->parent()->find();
+        $this->assertTrue($parent instanceof Folder);
+        $this->assertEquals($parent->primaryKey, 4);
+    }
 
     public function testPath()
     {
@@ -82,8 +82,8 @@ class ClosureTableBehaviorTest extends CDbTestCase
         $this->assertEquals(7, $folders[3]->primaryKey);
     }
 
-	public function testIsLeaf()
-	{
+    public function testIsLeaf()
+    {
         $leafs = array(3,5,7);
         $notLeafs = array(1,2,4,6);
         foreach ($leafs as $id) {
@@ -96,10 +96,10 @@ class ClosureTableBehaviorTest extends CDbTestCase
             $this->assertTrue($folder instanceof Folder);
             $this->assertFalse($folder->isLeaf());
         };
-	}
+    }
 
-	public function testAppend()
-	{
+    public function testAppend()
+    {
         $folder = Folder::model()->findByPk(5);
         $newFolder = new Folder();
         $newFolder->name = 'Folder 1.4.5.8';
@@ -114,7 +114,7 @@ class ClosureTableBehaviorTest extends CDbTestCase
         $parent = $parent->parent()->find();
         $this->assertTrue($parent instanceof Folder);
         $this->assertEquals(1, $parent->primaryKey);
-	}
+    }
 
     public function testMoveTo()
     {

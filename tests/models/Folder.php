@@ -28,24 +28,24 @@ class Folder extends CActiveRecord
      * @return Folder
      */
     public static function model($className=__CLASS__)
-	{
-		return parent::model($className);
-	}
+    {
+        return parent::model($className);
+    }
 
-	public function behaviors()
-	{
-		return array(
-			'tree'=>array(
-				'class'=>'ext.ClosureTableBehavior',
-				'closureTableName'=>'folder_tree',
-			),
-		);
-	}
+    public function behaviors()
+    {
+        return array(
+            'tree'=>array(
+                'class'=>'ext.ClosureTableBehavior',
+                'closureTableName'=>'folder_tree',
+            ),
+        );
+    }
 
-	public function rules()
-	{
-		return array(
-			array('name','required'),
-		);
-	}
+    public function rules()
+    {
+        return array(
+            array('name','required'),
+        );
+    }
 }
