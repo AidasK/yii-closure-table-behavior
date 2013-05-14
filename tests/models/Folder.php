@@ -1,6 +1,7 @@
 <?php
 /**
  * Class Folder
+ * ClosureTableBehavior scopes
  * @method Folder descendantsOf($primaryKey, $depth = null) Named scope. Finds descendants
  * @method Folder descendants($depth=null) Named scope. Finds descendants
  * @method Folder childrenOf($primaryKey) Named scope. Finds children
@@ -11,13 +12,18 @@
  * @method Folder parent() Named scope. Gets parent
  * @method Folder pathOf($primaryKey) Named scope. Gets path
  * @method Folder path() Named scope. Gets path
+ * @method Folder fullPathOf($primaryKey) Named scope. Get path with its children. (Warning: root node isn't returned.)
+ * @method Folder fullPath() Named scope. Get path with its children. (Warning: root node isn't returned.)
  * @method Folder leaf() Named scope. Fills leaf attribute
- *
+ * ClosureTableBehavior methods
  * @method bool isLeaf() If node is a leaf
- * @method Folder appendTo($target, $node = null) Appends node to target as child (Only for new records).
- * @method Folder append(CActiveRecord $target) Appends node to target as child (Only for new records).
- * @method Folder moveTo($target, $node = null) Move node
- * @method Folder deleteNode($primaryKey = null) Delete node
+ * @method bool saveNodeAsRoot($runValidation = true, $attributes = null) Save node and insert closure table records
+ * with transaction.
+ * @method int markAsRoot($primaryKey) Insert closure table records
+ * @method int appendTo($target, $node = null) Appends node to target as child (Only for new records).
+ * @method int append(CActiveRecord $target) Appends node to target as child (Only for new records).
+ * @method int moveTo($target, $node = null) Move node
+ * @method int deleteNode($primaryKey = null) Delete node
  */
 class Folder extends CActiveRecord
 {
