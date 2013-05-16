@@ -99,13 +99,24 @@ class ClosureTableBehaviorTest extends CDbTestCase
         foreach ($leafs as $id) {
             $folder = Folder::model()->leaf()->findByPk($id);
             $this->assertTrue($folder instanceof Folder);
+            $this->assertNotEmpty($folder->id);
             $this->assertTrue($folder->isLeaf());
         };
         foreach ($notLeafs as $id) {
             $folder = Folder::model()->leaf()->findByPk($id);
             $this->assertTrue($folder instanceof Folder);
+            $this->assertNotEmpty($folder->id);
             $this->assertFalse($folder->isLeaf());
         };
+    }
+
+    public function testChildrenIsLeaf()
+    {
+        $folders = Folder::model()->leaf()->childrenOf(4)->findAll();
+        $this->assertEquals(5, $folders[0]->primaryKey);
+        $this->assertTrue($folders[0]->isLeaf());
+        $this->assertEquals(6, $folders[1]->primaryKey);
+        $this->assertFalse($folders[1]->isLeaf());
     }
 
     public function testAppend()

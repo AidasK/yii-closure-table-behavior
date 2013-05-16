@@ -230,13 +230,17 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
         $closureTableAlias = 'ctleaf';
         $primaryKeyName = $owner->tableSchema->primaryKey;
+        $select = 'ISNULL(' . $closureTableAlias . '.' . $parentAttribute . ') as ' . $leafColumn;
+        if ($criteria->select==='*') {
+            $select = $alias . '.*,' . $select;
+        }
         $criteria->mergeWith(array(
             'join' => 'LEFT JOIN ' . $closureTable . ' ' . $closureTableAlias
                     . ' ON ' . $closureTableAlias . '.' . $parentAttribute . '=' . $alias . '.' . $primaryKeyName
                     . ' AND '. $closureTableAlias . '.' . $parentAttribute . '!='
                     . $closureTableAlias . '.' . $db->quoteColumnName($this->childAttribute),
             'select' => array(
-                'ISNULL(' . $closureTableAlias . '.' . $parentAttribute . ') as ' . $leafColumn
+                $select
             )
         ));
         return $owner;
