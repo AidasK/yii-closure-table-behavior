@@ -274,6 +274,9 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         }
         try {
             if (!$owner->save($runValidation, $attributes)) {
+                if (isset($transaction)) {
+                    $transaction->rollback();
+                }
                 return false;
             }
             $this->markAsRoot($owner->primaryKey);
