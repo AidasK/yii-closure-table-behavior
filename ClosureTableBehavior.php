@@ -4,7 +4,7 @@
  * Provides tree set functionality for a model.
  *
  * @author Aidas Klimas
- * @link https://github.com/.../
+ * @link https://github.com/AidasK/yii-closure-table-behavior/
  * @version 1.0
  */
 class ClosureTableBehavior extends CActiveRecordBehavior
