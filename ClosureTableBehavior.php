@@ -174,6 +174,47 @@ class ClosureTableBehavior extends CActiveRecordBehavior
     }
 
     /**
+     * Named scope. Get path with its children.
+     * Warning: root node isn't returned.
+     *
+     * @return CActiveRecord the owner.
+     */
+    public function fullPathOf($primaryKey)
+    {
+        /* @var $owner CActiveRecord */
+        $owner = $this->getOwner();
+        $db = $owner->getDbConnection();
+        $criteria = $owner->getDbCriteria();
+        $alias = $db->quoteColumnName($owner->getTableAlias());
+        $closureTable = $db->quoteTableName($this->closureTableName);
+        $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
+        $childAttribute = $db->quoteColumnName($this->childAttribute);
+        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $criteria->mergeWith(array(
+            'join' => 'JOIN ' . $closureTable . ' ct1'
+                . ' JOIN ' . $closureTable . ' ct2'
+                . ' ON ct1.' . $parentAttribute . '=ct2.' . $parentAttribute
+                . ' AND ' . $alias . '.' . $primaryKeyName . '=ct2.' . $childAttribute
+                . ' AND ct2.' . $db->quoteColumnName($this->depthAttribute) . '=1',
+            'condition' => 'ct1.' . $childAttribute . '=' . $primaryKey
+        ));
+        return $owner;
+    }
+
+    /**
+     * Named scope. Get path with its children.
+     * Warning: root node isn't returned.
+     *
+     * @return CActiveRecord the owner.
+     */
+    public function fullPath()
+    {
+        /* @var $owner CActiveRecord */
+        $owner = $this->getOwner();
+        return $this->fullPathOf($owner->getPrimaryKey());
+    }
+
+    /**
      * Named scope. Selects leaf column which indicates if record is a leaf
      * @return CActiveRecord the owner.
      */
@@ -208,6 +249,62 @@ class ClosureTableBehavior extends CActiveRecordBehavior
     public function isLeaf()
     {
         return (boolean)$this->getOwner()->{$this->isLeafParameter};
+    }
+
+    /**
+     * Save node and insert closure table records with transaction
+     * @param boolean $runValidation whether to perform validation before saving the record.
+     * If the validation fails, the record will not be saved to database.
+     * @param array $attributes list of attributes that need to be saved. Defaults to null,
+     * meaning all attributes that are loaded from DB will be saved.
+     * @throws CDbException|Exception
+     * @return boolean whether the saving succeeds
+     */
+    public function saveNodeAsRoot($runValidation = true, $attributes = null)
+    {
+        /* @var $owner CActiveRecord */
+        $owner = $this->getOwner();
+        $db = $owner->getDbConnection();
+        if ($db->getCurrentTransaction() === null) {
+            $transaction = $db->beginTransaction();
+        }
+        try {
+            if (!$owner->save($runValidation, $attributes)) {
+                return false;
+            }
+            $this->markAsRoot($owner->primaryKey);
+            if (isset($transaction)) {
+                $transaction->commit();
+            }
+        } catch (CDbException $e) {
+            if (isset($transaction)) {
+                $transaction->rollback();
+            }
+            throw $e;
+        }
+        return true;
+    }
+
+    /**
+     * Insert closure table records
+     * @param $primaryKey
+     * @return int
+     */
+    public function markAsRoot($primaryKey)
+    {
+        /* @var $owner CActiveRecord */
+        $owner = $this->getOwner();
+        $db = $owner->getDbConnection();
+        $childAttribute = $db->quoteColumnName($this->childAttribute);
+        $parentAttribute = $db->quoteColumnName($this->parentAttribute);
+        $depthAttribute = $db->quoteColumnName($this->depthAttribute);
+        $closureTable = $db->quoteTableName($this->closureTableName);
+        $cmd = $db->createCommand(
+            'INSERT INTO ' . $closureTable
+                . '(' . $parentAttribute . ',' . $childAttribute . ',' . $depthAttribute . ') '
+                . 'VALUES (:nodeId,:nodeId,\'0\')'
+        );
+        return $cmd->execute(array(':nodeId'=>$primaryKey));
     }
 
     /**

@@ -82,6 +82,16 @@ class ClosureTableBehaviorTest extends CDbTestCase
         $this->assertEquals(7, $folders[3]->primaryKey);
     }
 
+    public function testFullPath()
+    {
+        $folders = Folder::model()->fullPathOf(4)->findAll();
+        $this->assertEquals(4, count($folders));
+        $this->assertEquals(2, $folders[0]->primaryKey);
+        $this->assertEquals(4, $folders[1]->primaryKey);
+        $this->assertEquals(5, $folders[2]->primaryKey);
+        $this->assertEquals(6, $folders[3]->primaryKey);
+    }
+
     public function testIsLeaf()
     {
         $leafs = array(3,5,7);
@@ -177,6 +187,14 @@ class ClosureTableBehaviorTest extends CDbTestCase
         $this->assertEquals(0, count(Folder::model()->findAll()));
     }
 
+    public function testSaveAsRoot()
+    {
+        $newFolder = new Folder();
+        $newFolder->name = 'Folder 1';
+        $this->assertTrue($newFolder->saveNodeAsRoot());
+        $this->assertEquals(0, count($newFolder->descendants()->findAll()));
+        $this->assertEquals(0, count($newFolder->ancestors()->findAll()));
+    }
 
     public function testMixed()
     {
