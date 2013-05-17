@@ -27,11 +27,11 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
-        $alias = $db->quoteColumnName($owner->getTableAlias());
+        $alias = $owner->getTableAlias(true);
         $closureTable = $db->quoteTableName($this->closureTableName);
         $childAttribute = $db->quoteColumnName($this->childAttribute);
         $parentAttribute = $db->quoteColumnName($this->parentAttribute);
-        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $criteria->mergeWith(array(
             'join' => 'JOIN ' . $closureTable
                     . ' ON ' . $closureTable . '.' . $db->quoteColumnName($this->childAttribute) . '='
@@ -150,9 +150,9 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
-        $alias = $db->quoteColumnName($owner->getTableAlias());
+        $alias = $owner->getTableAlias(true);
         $closureTable = $db->quoteTableName($this->closureTableName);
-        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $criteria->mergeWith(array(
             'join' => 'JOIN ' . $closureTable
                 . ' ON ' . $closureTable . '.' . $db->quoteColumnName($this->parentAttribute) . '='
@@ -185,11 +185,11 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
-        $alias = $db->quoteColumnName($owner->getTableAlias());
+        $alias = $owner->getTableAlias(true);
         $closureTable = $db->quoteTableName($this->closureTableName);
         $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
         $childAttribute = $db->quoteColumnName($this->childAttribute);
-        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $criteria->mergeWith(array(
             'join' => 'JOIN ' . $closureTable . ' ct1'
                 . ' JOIN ' . $closureTable . ' ct2'
@@ -224,12 +224,12 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
-        $alias = $db->quoteColumnName($owner->getTableAlias());
+        $alias = $owner->getTableAlias(true);
         $closureTable = $db->quoteTableName($this->closureTableName);
         $leafColumn = $db->quoteColumnName($this->isLeafParameter);
         $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
         $closureTableAlias = 'ctleaf';
-        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $select = 'ISNULL(' . $closureTableAlias . '.' . $parentAttribute . ') as ' . $leafColumn;
         if ($criteria->select==='*') {
             $select = $alias . '.*,' . $select;
@@ -241,7 +241,8 @@ class ClosureTableBehavior extends CActiveRecordBehavior
                     . $closureTableAlias . '.' . $db->quoteColumnName($this->childAttribute),
             'select' => array(
                 $select
-            )
+            ),
+            'group' => $alias . '.' . $primaryKeyName
         ));
         return $owner;
     }
