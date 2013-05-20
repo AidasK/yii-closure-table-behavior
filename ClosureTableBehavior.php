@@ -379,9 +379,9 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $db = $owner->getDbConnection();
         $closureTable = $db->quoteTableName($this->closureTableName);
         if ($target instanceof CActiveRecord) {
-            $targetId = $db->quoteValue($target->primaryKey);
+            $targetId = $target->primaryKey;
         } else {
-            $targetId = $db->quoteValue($target);
+            $targetId = $target;
         }
         if ($node === null) {
             $node = $owner;
