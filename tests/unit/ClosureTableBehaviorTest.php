@@ -230,4 +230,36 @@ class ClosureTableBehaviorTest extends CDbTestCase
         $this->assertEquals(5, $folders[2]->primaryKey);
         $this->assertEquals(8, $folders[3]->primaryKey);
     }
+
+    public function testQuoting()
+    {
+        $this->assertEmpty(Folder::model()->findByPk("'"));
+        $this->assertEmpty(Folder::model()->ancestorsOf("'")->findAll());
+        $this->assertEmpty(Folder::model()->childrenOf("'")->findAll());
+        $this->assertEmpty(Folder::model()->parentOf("'")->findAll());
+        $this->assertEmpty(Folder::model()->deleteNode("'"));
+        $this->assertEmpty(Folder::model()->descendantsOf("'")->findAll());
+        $this->assertEmpty(Folder::model()->fullPathOf("'")->findAll());
+        $this->assertEmpty(Folder::model()->pathOf("'")->findAll());
+
+        /** @var Folder $folder5 */
+        $folder5 = Folder::model()->findByPk(5);
+        try {
+            $folder5->moveTo("'");
+            $this->fail();
+        } catch (CDbException $e) {
+            $this->assertEquals(201, $e->getCode());
+        }
+        $newFolder = new Folder();
+        $newFolder->name = 'Folder';
+        $this->assertTrue($newFolder->save());
+        $this->assertEquals(1, $newFolder->appendTo("'"));
+        try {
+            Folder::model()->markAsRoot("'");
+            $this->fail();
+        } catch (CDbException $e) {
+            // http://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html
+            $this->assertEquals('1452', $e->errorInfo[1]);
+        }
+    }
 }

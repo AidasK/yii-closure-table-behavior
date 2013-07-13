@@ -31,12 +31,12 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $closureTable = $db->quoteTableName($this->closureTableName);
         $childAttribute = $db->quoteColumnName($this->childAttribute);
         $parentAttribute = $db->quoteColumnName($this->parentAttribute);
-        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $criteria->mergeWith(array(
             'join' => 'JOIN ' . $closureTable
-                    . ' ON ' . $closureTable . '.' . $db->quoteColumnName($this->childAttribute) . '='
+                    . ' ON ' . $closureTable . '.' . $childAttribute . '='
                     . $alias . '.' . $primaryKeyName,
-            'condition' => $closureTable . '.' . $db->quoteColumnName($this->parentAttribute) . '=' . $primaryKey
+            'condition' => $closureTable . '.' . $parentAttribute . '=' . $db->quoteValue($primaryKey)
         ));
         if ($depth === null) {
             $criteria->addCondition(
@@ -152,12 +152,13 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $criteria = $owner->getDbCriteria();
         $alias = $db->quoteColumnName($owner->getTableAlias());
         $closureTable = $db->quoteTableName($this->closureTableName);
-        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $criteria->mergeWith(array(
             'join' => 'JOIN ' . $closureTable
                 . ' ON ' . $closureTable . '.' . $db->quoteColumnName($this->parentAttribute) . '='
                 . $alias . '.' . $primaryKeyName,
-            'condition' => $closureTable . '.' . $db->quoteColumnName($this->childAttribute) . '=' . $primaryKey
+            'condition' => $closureTable . '.' . $db->quoteColumnName($this->childAttribute) . '='
+                . $db->quoteValue($primaryKey)
         ));
         return $owner;
     }
@@ -189,14 +190,14 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $closureTable = $db->quoteTableName($this->closureTableName);
         $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
         $childAttribute = $db->quoteColumnName($this->childAttribute);
-        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $criteria->mergeWith(array(
             'join' => 'JOIN ' . $closureTable . ' ct1'
                 . ' JOIN ' . $closureTable . ' ct2'
                 . ' ON ct1.' . $parentAttribute . '=ct2.' . $parentAttribute
                 . ' AND ' . $alias . '.' . $primaryKeyName . '=ct2.' . $childAttribute
                 . ' AND ct2.' . $db->quoteColumnName($this->depthAttribute) . '=1',
-            'condition' => 'ct1.' . $childAttribute . '=' . $primaryKey
+            'condition' => 'ct1.' . $childAttribute . '=' . $db->quoteValue($primaryKey)
         ));
         return $owner;
     }
@@ -229,7 +230,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $leafColumn = $db->quoteColumnName($this->isLeafParameter);
         $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
         $closureTableAlias = 'ctleaf';
-        $primaryKeyName = $owner->tableSchema->primaryKey;
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $select = 'ISNULL(' . $closureTableAlias . '.' . $parentAttribute . ') as ' . $leafColumn;
         if ($criteria->select==='*') {
             $select = $alias . '.*,' . $select;
@@ -252,7 +253,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
      */
     public function isLeaf()
     {
-        return (boolean)$this->getOwner()->{$this->isLeafParameter};
+        return (boolean) $this->getOwner()->{$this->isLeafParameter};
     }
 
     /**
@@ -311,13 +312,13 @@ class ClosureTableBehavior extends CActiveRecordBehavior
                 . '(' . $parentAttribute . ',' . $childAttribute . ',' . $depthAttribute . ') '
                 . 'VALUES (:nodeId,:nodeId,\'0\')'
         );
-        return $cmd->execute(array(':nodeId'=>$primaryKey));
+        return $cmd->execute(array(':nodeId' => $primaryKey));
     }
 
     /**
      * Appends node to target as child (Only for new records).
-     * @param CActiveRecord|int $target where to append
-     * @param CActiveRecord|int $node node to append
+     * @param CActiveRecord|int|string $target where to append
+     * @param CActiveRecord|int|string $node node to append
      * @return number of rows inserted, on fail - 0
      */
     public function appendTo($target, $node = null)
@@ -327,9 +328,9 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $db = $owner->getDbConnection();
         $closureTable = $db->quoteTableName($this->closureTableName);
         if ($target instanceof CActiveRecord) {
-            $primaryKey = $db->quoteValue($target->primaryKey);
+            $primaryKey = $target->primaryKey;
         } else {
-            $primaryKey = $db->quoteValue($target);
+            $primaryKey = $target;
         }
         if ($node === null) {
             $node = $owner;
@@ -348,10 +349,10 @@ class ClosureTableBehavior extends CActiveRecordBehavior
             . 'SELECT ' . $parentAttribute . ',:nodeId'
             . ',' . $depthAttribute . '+1 '
             . 'FROM ' . $closureTable
-            . 'WHERE ' . $childAttribute . '=' . $primaryKey
+            . 'WHERE ' . $childAttribute . '=:pk '
             . 'UNION ALL SELECT :nodeId,:nodeId,\'0\''
         );
-        return $cmd->execute(array(':nodeId'=>$nodeId));
+        return $cmd->execute(array(':nodeId' => $nodeId, ':pk' => $primaryKey));
     }
 
 
@@ -367,8 +368,8 @@ class ClosureTableBehavior extends CActiveRecordBehavior
 
     /**
      * Move node
-     * @param CActiveRecord|int $target
-     * @param CActiveRecord|int $node if null, owner id will be used
+     * @param CActiveRecord|int|string $target
+     * @param mCActiveRecord|int|string $node if null, owner id will be used
      * @throws CDbException|Exception
      */
     public function moveTo($target, $node = null)
@@ -378,9 +379,9 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $db = $owner->getDbConnection();
         $closureTable = $db->quoteTableName($this->closureTableName);
         if ($target instanceof CActiveRecord) {
-            $targetId = $db->quoteValue($target->primaryKey);
+            $targetId = $target->primaryKey;
         } else {
-            $targetId = $db->quoteValue($target);
+            $targetId = $target;
         }
         if ($node === null) {
             $node = $owner;
@@ -405,7 +406,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
                 . 'WHERE d.' . $parentAttribute . '=? AND x.' . $parentAttribute . ' IS NULL'
             );
             if (!$cmd->execute(array($nodeId))) {
-                throw new CDbException('Node had no records in closure table');
+                throw new CDbException('Node had no records in closure table', 200);
             }
             $cmd = $db->createCommand(
                 'INSERT INTO ' . $closureTable . '(' . $parentAttribute . ',' . $childAttribute . ',' . $depthAttribute . ')'
@@ -415,7 +416,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
                 . 'WHERE b.' . $parentAttribute . '=? AND u.' . $childAttribute . '=?'
             );
             if (!$cmd->execute(array($nodeId, $targetId))) {
-                throw new CDbException('Target node does not exist');
+                throw new CDbException('Target node does not exist', 201);
             }
             if (isset($transaction)) {
                 $transaction->commit();
@@ -448,7 +449,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
             'DELETE t, f '
             . 'FROM ' . $closureTable . ' t '
             . 'JOIN ' . $closureTable . ' tt ON t.' . $childAttribute . '= tt.' . $childAttribute
-            . 'JOIN ' . $owner->tableName() . ' f ON t.' . $childAttribute . '=f.'.$primaryKeyName
+            . 'JOIN ' . $owner->tableName() . ' f ON t.' . $childAttribute . '=f.' . $primaryKeyName
             . 'WHERE tt.' . $db->quoteColumnName($this->parentAttribute) . '=?'
         );
         return $cmd->execute(array($primaryKey));
