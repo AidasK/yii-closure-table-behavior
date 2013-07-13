@@ -12,6 +12,7 @@
  * @method Folder parent() Named scope. Gets parent
  * @method Folder pathOf($primaryKey) Named scope. Gets path
  * @method Folder path() Named scope. Gets path
+ * @method Folder unorderedPathOf($primaryKey) Named scope. Gets path to the node.
  * @method Folder fullPathOf($primaryKey) Named scope. Get path with its children. (Warning: root node isn't returned.)
  * @method Folder fullPath() Named scope. Get path with its children. (Warning: root node isn't returned.)
  * @method Folder leaf() Named scope. Fills leaf attribute

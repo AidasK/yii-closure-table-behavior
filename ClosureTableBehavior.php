@@ -17,7 +17,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
 
     /**
      * Finds descendants
-     * @param int $primaryKey.
+     * @param int|string $primaryKey.
      * @param int $depth the depth.
      * @return CActiveRecord the owner.
      */
@@ -27,7 +27,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
-        $alias = $db->quoteColumnName($owner->getTableAlias());
+        $alias = $owner->getTableAlias(true);
         $closureTable = $db->quoteTableName($this->closureTableName);
         $childAttribute = $db->quoteColumnName($this->childAttribute);
         $parentAttribute = $db->quoteColumnName($this->parentAttribute);
@@ -64,7 +64,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
 
     /**
      * Named scope. Gets children for node (direct descendants only).
-     * @param int $primaryKey
+     * @param int|string $primaryKey
      * @return CActiveRecord the owner.
      */
     public function childrenOf($primaryKey)
@@ -83,7 +83,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
 
     /**
      * Named scope. Gets ancestors for node.
-     * @param int $primaryKey primary key
+     * @param int|string $primaryKey primary key
      * @param int $depth the depth.
      * @return CActiveRecord the owner.
      */
@@ -93,17 +93,18 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
-        $closureTable = $db->quoteTableName($this->closureTableName);
-        $this->pathOf($primaryKey);
+        $closureTableAlias = $db->quoteTableName('ctp');
+        $this->unorderedPathOf($primaryKey);
         if ($depth == null) {
-            $criteria->addCondition(
-                $closureTable . '.' . $db->quoteColumnName($this->childAttribute)
-                . '!=' . $closureTable . '.' . $db->quoteColumnName($this->parentAttribute)
-            );
+            $criteria->mergeWith(array(
+                'condition' => $closureTableAlias . '.' . $db->quoteColumnName($this->childAttribute)
+                    . '!=' . $closureTableAlias . '.' . $db->quoteColumnName($this->parentAttribute)
+            ));
         } else {
-            $criteria->addCondition(
-                $closureTable . '.' . $db->quoteColumnName($this->depthAttribute) . ' BETWEEN 1 AND ' . (int) $depth
-            );
+            $criteria->mergeWith(array(
+                'condition' => $closureTableAlias . '.' . $db->quoteColumnName($this->depthAttribute)
+                    . ' BETWEEN 1 AND ' . (int) $depth
+            ));
         }
         return $owner;
     }
@@ -122,7 +123,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
 
     /**
      * Named scope. Gets parent of node.
-     * @param int $primaryKey primary key
+     * @param int|string $primaryKey primary key
      * @return CActiveRecord the owner.
      */
     public function parentOf($primaryKey)
@@ -141,7 +142,32 @@ class ClosureTableBehavior extends CActiveRecordBehavior
 
     /**
      * Named scope. Gets path to the node.
-     * @param int $primaryKey primary key
+     * @param int|string $primaryKey primary key
+     * @return CActiveRecord the owner.
+     */
+    public function unorderedPathOf($primaryKey)
+    {
+        /* @var $owner CActiveRecord */
+        $owner = $this->getOwner();
+        $db = $owner->getDbConnection();
+        $criteria = $owner->getDbCriteria();
+        $alias = $owner->getTableAlias(true);
+        $closureTable = $db->quoteTableName($this->closureTableName);
+        $closureTableAlias = $db->quoteTableName('ctp');
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
+        $criteria->mergeWith(array(
+            'join' => 'JOIN ' . $closureTable . ' ' . $closureTableAlias
+                . ' ON ' . $closureTableAlias . '.' . $db->quoteColumnName($this->parentAttribute) . '='
+                . $alias . '.' . $primaryKeyName,
+            'condition' => $closureTableAlias . '.' . $db->quoteColumnName($this->childAttribute) . '='
+                . $db->quoteValue($primaryKey)
+        ));
+        return $owner;
+    }
+
+    /**
+     * Named scope. Gets path to the node.
+     * @param int|string $primaryKey primary key
      * @return CActiveRecord the owner.
      */
     public function pathOf($primaryKey)
@@ -149,16 +175,12 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         /* @var $owner CActiveRecord */
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
+        $this->unorderedPathOf($primaryKey);
         $criteria = $owner->getDbCriteria();
-        $alias = $db->quoteColumnName($owner->getTableAlias());
-        $closureTable = $db->quoteTableName($this->closureTableName);
-        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
+        $closureTableAlias = $db->quoteTableName('ctp');
+        $depthAttribute = $db->quoteColumnName($this->depthAttribute);
         $criteria->mergeWith(array(
-            'join' => 'JOIN ' . $closureTable
-                . ' ON ' . $closureTable . '.' . $db->quoteColumnName($this->parentAttribute) . '='
-                . $alias . '.' . $primaryKeyName,
-            'condition' => $closureTable . '.' . $db->quoteColumnName($this->childAttribute) . '='
-                . $db->quoteValue($primaryKey)
+            'order' => $closureTableAlias . '.' . $depthAttribute . ' DESC'
         ));
         return $owner;
     }
@@ -186,7 +208,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
-        $alias = $db->quoteColumnName($owner->getTableAlias());
+        $alias = $owner->getTableAlias(true);
         $closureTable = $db->quoteTableName($this->closureTableName);
         $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
         $childAttribute = $db->quoteColumnName($this->childAttribute);
@@ -225,7 +247,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
-        $alias = $db->quoteColumnName($owner->getTableAlias());
+        $alias = $owner->getTableAlias(true);
         $closureTable = $db->quoteTableName($this->closureTableName);
         $leafColumn = $db->quoteColumnName($this->isLeafParameter);
         $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
@@ -242,7 +264,8 @@ class ClosureTableBehavior extends CActiveRecordBehavior
                     . $closureTableAlias . '.' . $db->quoteColumnName($this->childAttribute),
             'select' => array(
                 $select
-            )
+            ),
+            'group' => $alias . '.' . $primaryKeyName
         ));
         return $owner;
     }
@@ -369,7 +392,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
     /**
      * Move node
      * @param CActiveRecord|int|string $target
-     * @param mCActiveRecord|int|string $node if null, owner id will be used
+     * @param CActiveRecord|int|string $node if null, owner id will be used
      * @throws CDbException|Exception
      */
     public function moveTo($target, $node = null)

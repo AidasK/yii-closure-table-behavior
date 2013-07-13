@@ -117,6 +117,9 @@ class ClosureTableBehaviorTest extends CDbTestCase
         $this->assertTrue($folders[0]->isLeaf());
         $this->assertEquals(6, $folders[1]->primaryKey);
         $this->assertFalse($folders[1]->isLeaf());
+
+        $folders = Folder::model()->leaf()->childrenOf(1)->findAll();
+        $this->assertEquals(2, count($folders));
     }
 
     public function testAppend()
@@ -241,6 +244,7 @@ class ClosureTableBehaviorTest extends CDbTestCase
         $this->assertEmpty(Folder::model()->descendantsOf("'")->findAll());
         $this->assertEmpty(Folder::model()->fullPathOf("'")->findAll());
         $this->assertEmpty(Folder::model()->pathOf("'")->findAll());
+        $this->assertEmpty(Folder::model()->unorderedPathOf("'")->findAll());
 
         /** @var Folder $folder5 */
         $folder5 = Folder::model()->findByPk(5);
