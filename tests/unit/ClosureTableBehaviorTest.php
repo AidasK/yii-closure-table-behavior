@@ -4,6 +4,7 @@ class ClosureTableBehaviorTest extends CDbTestCase
     public $fixtures=array(
         'Folder',
         'folder_tree' => ':folder_tree',
+        'Related'
     );
 
     public function testDescendants()
@@ -208,6 +209,19 @@ class ClosureTableBehaviorTest extends CDbTestCase
         $this->assertTrue($newFolder->saveNodeAsRoot());
         $this->assertEquals(0, count($newFolder->descendants()->findAll()));
         $this->assertEquals(0, count($newFolder->ancestors()->findAll()));
+    }
+
+    public function testRelations()
+    {
+        $related = Related::model()->with("parent:leaf")->findByPk(1);
+        $this->assertNotNull($related);
+        $this->assertNotNull($related->parent);
+        $this->assertFalse($related->parent->isLeaf());
+
+        $related = Related::model()->with("parent:leaf")->findByPk(2);
+        $this->assertNotNull($related);
+        $this->assertNotNull($related->parent);
+        $this->assertTrue($related->parent->isLeaf());
     }
 
     public function testMixed()

@@ -248,11 +248,10 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $criteria = $owner->getDbCriteria();
         $alias = $owner->getTableAlias(true);
         $closureTable = $db->quoteTableName($this->closureTableName);
-        $leafColumn = $db->quoteColumnName($this->isLeafParameter);
         $parentAttribute =  $db->quoteColumnName($this->parentAttribute);
         $closureTableAlias = 'ctleaf';
         $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
-        $select = 'ISNULL(' . $closureTableAlias . '.' . $parentAttribute . ') as ' . $leafColumn;
+        $select = 'ISNULL(' . $closureTableAlias . '.' . $parentAttribute . ') as ' . $this->isLeafParameter;
         if ($criteria->select==='*') {
             $select = $alias . '.*,' . $select;
         }
