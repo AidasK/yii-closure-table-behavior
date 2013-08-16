@@ -19,7 +19,8 @@ class ClosureTableBehavior extends CActiveRecordBehavior
      * Finds roots
      * @return CActiveRecord the owner.
      */
-	public function roots(){
+    public function roots()
+    {
         $owner = $this->getOwner();
         $db = $owner->getDbConnection();
         $criteria = $owner->getDbCriteria();
@@ -27,17 +28,17 @@ class ClosureTableBehavior extends CActiveRecordBehavior
         $closureTable = $db->quoteTableName($this->closureTableName);
         $childAttribute = $db->quoteColumnName($this->childAttribute);
         $parentAttribute = $db->quoteColumnName($this->parentAttribute);
-		$primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
         $criteria->mergeWith(array(
             'join' => 'LEFT JOIN ' . $closureTable . ' ct1'
-				. ' ON ' . $alias . '.' . $primaryKeyName. '=ct1.' . $childAttribute
-				. ' LEFT JOIN ' . $closureTable . ' ct2'
-                . ' ON ct1.' . $childAttribute . '=ct2.' . $childAttribute
-                . ' AND ct2.' . $parentAttribute . '<>ct1.' . $parentAttribute,
+                    . ' ON ' . $alias . '.' . $primaryKeyName . '=ct1.' . $childAttribute
+                    . ' LEFT JOIN ' . $closureTable . ' ct2'
+                    . ' ON ct1.' . $childAttribute . '=ct2.' . $childAttribute
+                    . ' AND ct2.' . $parentAttribute . '<>ct1.' . $parentAttribute,
             'condition' => 'ct2.' . $parentAttribute . 'IS NULL'
         ));
-		return $owner;
-	}
+        return $owner;
+    }
 
 
     /**
