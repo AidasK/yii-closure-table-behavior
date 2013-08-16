@@ -5,7 +5,7 @@
  *
  * @author Aidas Klimas
  * @link https://github.com/AidasK/yii-closure-table-behavior/
- * @version 1.0
+ * @version 1.1.0
  */
 class ClosureTableBehavior extends CActiveRecordBehavior
 {
