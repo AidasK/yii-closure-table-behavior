@@ -6,6 +6,19 @@ class ClosureTableBehaviorTest extends CDbTestCase
         'folder_tree' => ':folder_tree',
         'Related'
     );
+    
+    public function testRoots() {
+        $folder = Folder::model()->findByPk(1);
+        $this->assertTrue($folder instanceof Folder);
+        $rootFolders=  Folder::model()->roots()->findAll();
+        $this->assertEquals(1, count($rootFolders));
+        $ancestorsCount=0;
+        foreach ($rootFolders as $row){
+            $ancestorsCount+=$row->ancestors()->count();
+        }
+        $this->assertEquals(0, $ancestorsCount);
+        
+    }
 
     public function testDescendants()
     {
