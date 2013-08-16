@@ -29,6 +29,16 @@ Schema example: /tests/schema/db.sql
 
 Behavior usage: /tests/unit/ClosureTableBehaviorTest.php
 
+Contribution
+------------
+
+Your participation to Yii Closure Table behavior development is very welcome!
+
+To ensure consistency throughout the source code, keep these rules in mind as you are working:
+ * All features or bug fixes must be tested by one or more specs.
+ * Your code should follow [PSR-2](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md) coding style guide
+
+
 
 Literature:
 -----------
