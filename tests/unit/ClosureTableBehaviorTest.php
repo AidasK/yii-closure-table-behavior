@@ -140,6 +140,7 @@ class ClosureTableBehaviorTest extends CDbTestCase
     {
         $folder = Folder::model()->findByPk(5);
         $newFolder = new Folder();
+        $newFolder->id = 8;
         $newFolder->name = 'Folder 1.4.5.8';
         $this->assertTrue($newFolder->save());
         $this->assertGreaterThan(0, $folder->append($newFolder));
@@ -211,8 +212,38 @@ class ClosureTableBehaviorTest extends CDbTestCase
 
         $this->assertEquals(0, Folder::model()->deleteNode(0));
 
-        $this->assertEquals(3, Folder::model()->deleteNode(1));
+        $this->assertTrue(Folder::model()->deleteNode(1) > 0);
         $this->assertEquals(0, count(Folder::model()->findAll()));
+    }
+
+    public function testDetachNodeMiddle()
+    {
+        /** @var Folder $folder */
+        $folder = Folder::model()->findByPk(4);
+        $this->assertTrue($folder instanceof Folder);
+        $this->assertEquals(12, $folder->detachNode());// 12 relations should be deleted
+        $this->assertEquals(0, count($folder->ancestors()->findAll()));
+        $this->assertEquals(0, count($folder->children()->findAll()));
+    }
+
+    public function testDetachNodeTop()
+    {
+        /** @var Folder $folder */
+        $folder = Folder::model()->findByPk(1);
+        $this->assertTrue($folder instanceof Folder);
+        $this->assertEquals(18, $folder->detachNode());
+        $this->assertEquals(0, count($folder->ancestors()->findAll()));
+        $this->assertEquals(0, count($folder->children()->findAll()));
+    }
+
+    public function testDetachNodeLeaf()
+    {
+        /** @var Folder $folder */
+        $folder = Folder::model()->findByPk(3);
+        $this->assertTrue($folder instanceof Folder);
+        $this->assertEquals(3, $folder->detachNode());
+        $this->assertEquals(0, count($folder->ancestors()->findAll()));
+        $this->assertEquals(0, count($folder->children()->findAll()));
     }
 
     public function testSaveAsRoot()
@@ -241,6 +272,7 @@ class ClosureTableBehaviorTest extends CDbTestCase
     {
         $folder5 = Folder::model()->findByPk(5);
         $newFolder = new Folder();
+        $newFolder->id = 8;
         $newFolder->name = 'Folder 1.4.5.8';
         $this->assertTrue($newFolder->save());
         $this->assertGreaterThan(0, $folder5->append($newFolder));

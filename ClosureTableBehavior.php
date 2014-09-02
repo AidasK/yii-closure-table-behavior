@@ -480,7 +480,7 @@ class ClosureTableBehavior extends CActiveRecordBehavior
     /**
      * Deletes node and it's descendants.
      * @param $primaryKey
-     * @return int number of rows deleted
+     * @return int number of rows and relations deleted (Note, number may differ in different mysql versions)
      */
     public function deleteNode($primaryKey = null)
     {
@@ -498,6 +498,31 @@ class ClosureTableBehavior extends CActiveRecordBehavior
             . 'FROM ' . $closureTable . ' t '
             . 'JOIN ' . $closureTable . ' tt ON t.' . $childAttribute . '= tt.' . $childAttribute
             . 'JOIN ' . $owner->tableName() . ' f ON t.' . $childAttribute . '=f.' . $primaryKeyName
+            . 'WHERE tt.' . $db->quoteColumnName($this->parentAttribute) . '=?'
+        );
+        return $cmd->execute(array($primaryKey));
+    }
+
+    /**
+     * Delete all records from closure table associated with this record
+     * @param $primaryKey
+     * @return int number of rows deleted
+     */
+    public function detachNode($primaryKey = null)
+    {
+        /* @var $owner CActiveRecord */
+        $owner = $this->getOwner();
+        if ($primaryKey === null) {
+            $primaryKey = $owner->primaryKey;
+        }
+        $db = $owner->getDbConnection();
+        $closureTable = $db->quoteTableName($this->closureTableName);
+        $childAttribute = $db->quoteColumnName($this->childAttribute);
+        $primaryKeyName = $db->quoteColumnName($owner->tableSchema->primaryKey);
+        $cmd = $db->createCommand(
+            'DELETE t '
+            . 'FROM ' . $closureTable . ' t '
+            . 'JOIN ' . $closureTable . ' tt ON t.' . $childAttribute . '= tt.' . $childAttribute
             . 'WHERE tt.' . $db->quoteColumnName($this->parentAttribute) . '=?'
         );
         return $cmd->execute(array($primaryKey));

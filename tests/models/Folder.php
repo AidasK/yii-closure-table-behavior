@@ -25,6 +25,7 @@
  * @method int append(CActiveRecord $target) Appends node to target as child (Only for new records).
  * @method int moveTo($target, $node = null) Move node
  * @method int deleteNode($primaryKey = null) Delete node
+ * @method int detachNode($primaryKey = null) Delete all records from closure table associated with this record
  */
 class Folder extends CActiveRecord
 {
